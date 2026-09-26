@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Position {
+  REVES
+  DERECHA
+}
+
+enum MatchResult {
+  WON
+  LOST
+  PENDING
+}
+
+/// One of INVICTUS's teams (the club fields five teams; each has its own roster and calendar).
+model Team {
+  id       String    @id @default(cuid())
+  name     String
+  category String
+  season   String
+  players  Player[]
+  fixtures Fixture[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([name, season])
+}
+
+/// A club player. Stats (matchesPlayed / matchesWon) come from the season tracking sheet.
+model Player {
+  id            String    @id @default(cuid())
+  fullName      String
+  birthYear     Int?
+  age           Int?
+  position      Position?
+  matchesPlayed Int       @default(0)
+  matchesWon    Int        @default(0)
+  photoUrl      String?
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+
+  asReves   FixturePair[] @relation("RevesPlayer")
+  asDerecha FixturePair[] @relation("DerechaPlayer")
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, fullName])
+}
+
+/// A "jornada" (matchday) of the league for a given team.
+model Fixture {
+  id       String        @id @default(cuid())
+  jornada  Int
+  opponent String
+  note     String?
+
+  team   Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+  pairs  FixturePair[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, jornada])
+}
+
+/// One pair (reves + derecha) fielded in a fixture, in a given age-index category (e.g. "PAREJA 95").
+model FixturePair {
+  id          String      @id @default(cuid())
+  category    String
+  combinedAge Int?
+  result      MatchResult @default(PENDING)
+
+  fixture   Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  fixtureId String
+
+  revesPlayer   Player? @relation("RevesPlayer", fields: [revesPlayerId], references: [id])
+  revesPlayerId String?
+
+  derechaPlayer   Player? @relation("DerechaPlayer", fields: [derechaPlayerId], references: [id])
+  derechaPlayerId String?
+}
+
+/// Singleton-ish row with the club's public facts, used across the site (hero, about section, footer).
+model ClubInfo {
+  id            String   @id @default(cuid())
+  name          String
+  tagline       String
+  city          String
+  founded       Int?
+  description   String
+  instagramUrl  String
+  teamsCount    Int
+  veteranTeams  Int
+  absoluteTeams Int
+  followers     Int?
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Club pillars/values shown in the "features" grid on the homepage.
+model Value {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  order       Int    @default(0)
+}
