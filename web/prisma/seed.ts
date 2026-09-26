@@ -244,6 +244,16 @@ function approximateBirthDate(birthYear: number | null, age: number | null): Dat
 const SEASON_REFERENCE_YEAR = 2026;
 
 async function main() {
+  // Safety guard: this script WIPES every table before reloading demo data. That's fine against a
+  // local/dev database, but must never run unattended against a real production DB (e.g. Neon) --
+  // require an explicit opt-in there so a stray `npm run db:setup` can't destroy live club data.
+  if (process.env.NODE_ENV === "production" && process.env.CONFIRM_SEED !== "yes") {
+    console.error(
+      "Refusing to seed: NODE_ENV=production. If you really want to reset this database, re-run with CONFIRM_SEED=yes."
+    );
+    process.exit(1);
+  }
+
   console.log("Seeding database...");
 
   await prisma.notification.deleteMany();

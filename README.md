@@ -96,6 +96,47 @@ npm run db:setup   # prisma db push + seed
 npm run dev
 ```
 
+## Despliegue público gratuito (Vercel + Neon)
+
+Docker Compose es para local. Para que la web sea accesible por internet sin coste recurrente:
+**Vercel** (hosting del sitio) + **Neon** (PostgreSQL gestionado, capa gratuita sin caducidad).
+
+> ⚠️ Antes de desplegar: la base de datos de producción **no debe resembrarse nunca
+> automáticamente** (a diferencia de Docker en local, que reinicia los datos a propósito en cada
+> arranque). `prisma/seed.ts` ya rechaza ejecutarse si detecta `NODE_ENV=production` salvo que se
+> le pase explícitamente `CONFIRM_SEED=yes` — es la salvaguarda para que un despliegue no borre
+> nunca los datos reales del club.
+
+1. **Crea la base de datos en Neon** ([neon.tech](https://neon.tech), plan gratis): crea un proyecto,
+   copia la cadena de conexión **"Pooled connection"** (recomendada para entornos serverless como
+   Vercel).
+2. **Importa el repo en Vercel** ([vercel.com](https://vercel.com) → "Add New Project" → conecta tu
+   cuenta de GitHub → selecciona `carlosalejoss/INVICTUS`).
+   - En "Root Directory" selecciona **`web`** (el proyecto Next.js vive en ese subdirectorio, no en
+     la raíz del repo).
+   - Framework se detecta solo como Next.js; no hace falta tocar el build command.
+3. **Variables de entorno** en Vercel (Project Settings → Environment Variables):
+   - `DATABASE_URL` → la cadena "Pooled connection" de Neon.
+   - `AUTH_SECRET` → un secreto nuevo y real, **no** el de `.env.example`. Genéralo con
+     `openssl rand -base64 32`.
+   - (Opcional) `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
+     `NOTIFY_EMAIL_TO` si quieres que las notificaciones de "hace falta otra pista" lleguen también
+     por email (si no las configuras, la web sigue funcionando y solo se queda el aviso dentro del
+     panel de directiva).
+4. **Deploy**. Vercel instala dependencias (esto ejecuta `prisma generate` automáticamente vía el
+   script `postinstall`) y construye el sitio.
+5. **Siembra la base de datos una sola vez** (crea las tablas y carga jugadores/equipos/temporada).
+   Desde tu máquina, con el `DATABASE_URL` de Neon:
+   ```bash
+   cd web
+   DATABASE_URL="<pooled-connection-de-neon>" CONFIRM_SEED=yes npm run db:setup
+   ```
+   No vuelvas a ejecutar esto contra producción salvo que quieras **borrar y resetear todo** a los
+   datos de ejemplo — es exactamente lo que hace.
+
+Con eso el sitio queda público en `tu-proyecto.vercel.app` (dominio propio opcional, configurable
+después en Vercel → Domains). Los pushes a `main` en GitHub despliegan automáticamente.
+
 ## Roles y permisos
 
 - **Visitante sin sesión ("no jugador")**: ve todo el sitio público (inicio, club, plantilla,

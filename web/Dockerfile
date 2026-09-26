@@ -6,11 +6,11 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && r
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm install
 
 COPY . .
 
-RUN npx prisma generate
 RUN npm run build
 
 RUN chmod +x docker-entrypoint.sh
