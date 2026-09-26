@@ -20,8 +20,7 @@ const TEAMS = [
 // Roster + season stats, migrated from "AA VETERANOS SENIOR CLUB.numbers" (hojas PAREJAS / Hoja 1 /
 // COMBINACIONES). Every player becomes a login-capable User. `username` is generated for the demo
 // (there's no real one in the source spreadsheet) -- flagged in the project README.
-// CAPITAN: no captain was recorded in the source file; Carlos Martinez (most matches played) was
-// picked as a placeholder -- tell us the real captain and we'll fix it.
+// CAPITAN: Jose Manuel, per the club.
 const PLAYERS: Array<{
   name: string;
   username: string;
@@ -38,7 +37,7 @@ const PLAYERS: Array<{
   { name: "Jose Luis Piquer", username: "jose.piquer", role: "JUGADOR", birthYear: null, age: 50, position: "REVES" },
   { name: "Marco", username: "marco", role: "JUGADOR", birthYear: 1974, age: 52, position: "REVES" },
   { name: "Carlos Saenz", username: "carlos.saenz", role: "JUGADOR", birthYear: 1971, age: 55, position: "REVES" },
-  { name: "Carlos Martinez", username: "carlos.martinez", role: "CAPITAN", birthYear: 1970, age: 56, position: "REVES" },
+  { name: "Carlos Martinez", username: "carlos.martinez", role: "JUGADOR", birthYear: 1970, age: 56, position: "REVES" },
   { name: "Jose Maria Jover Gomez", username: "jose.jover", role: "JUGADOR", birthYear: null, age: 60, position: "REVES" },
   { name: "Alberto Perez", username: "alberto.perez", role: "JUGADOR", birthYear: null, age: 43, position: "DERECHA" },
   { name: "Ruben Aguilar", username: "ruben.aguilar", role: "JUGADOR", birthYear: 1982, age: 44, position: "DERECHA" },
@@ -46,7 +45,7 @@ const PLAYERS: Array<{
   { name: "Lorenzo Linares", username: "lorenzo.linares", role: "JUGADOR", birthYear: null, age: 49, position: "DERECHA" },
   { name: "Moises Beltran", username: "moises.beltran", role: "JUGADOR", birthYear: 1976, age: 50, position: "DERECHA" },
   { name: "JJ", username: "jj", role: "JUGADOR", birthYear: null, age: 52, position: "DERECHA" },
-  { name: "Jose Manuel", username: "jose.manuel", role: "JUGADOR", birthYear: 1971, age: 55, position: "DERECHA" },
+  { name: "Jose Manuel", username: "jose.manuel", role: "CAPITAN", birthYear: 1971, age: 55, position: "DERECHA" },
   { name: "Angel Garcia", username: "angel.garcia", role: "JUGADOR", birthYear: 1970, age: 56, position: "DERECHA" },
   { name: "Jesus Roman", username: "jesus.roman", role: "JUGADOR", birthYear: 1969, age: 57, position: "DERECHA" },
   { name: "German", username: "german", role: "JUGADOR", birthYear: null, age: 61, position: "DERECHA" },
@@ -217,6 +216,17 @@ const VALUES = [
   { title: "Pasión por el pádel", description: "Una comunidad de más de 1.800 seguidores que vive el pádel como algo más que un deporte.", icon: "heart", order: 4 },
 ];
 
+// Real sponsor logos provided by the club, served from /public/sponsors.
+const SPONSORS = [
+  { name: "La Junquera", logoUrl: "/sponsors/junquera.jpg", order: 1 },
+  { name: "Oleny Congelados", logoUrl: "/sponsors/oleny.jpg", order: 2 },
+  { name: "Libra Abogados y Asesores", logoUrl: "/sponsors/libra.jpg", order: 3 },
+  { name: "Hotel Cesaraugusta", logoUrl: "/sponsors/cesaraugusta.jpg", order: 4 },
+  { name: "Home17 Inmobiliaria", logoUrl: "/sponsors/home17.jpg", order: 5 },
+  { name: "Afilador Aragonesa", logoUrl: "/sponsors/afilador-aragonesa.jpg", order: 6 },
+  { name: "Daxia", logoUrl: "/sponsors/daxia.jpg", order: 7 },
+];
+
 function toMatchResult(result: boolean | null): MatchResult {
   if (result === true) return MatchResult.WON;
   if (result === false) return MatchResult.LOST;
@@ -331,9 +341,12 @@ async function main() {
   for (const v of VALUES) {
     await prisma.value.create({ data: v });
   }
+  for (const s of SPONSORS) {
+    await prisma.sponsor.create({ data: s });
+  }
 
-  console.log(`Seed complete: ${PLAYERS.length + 1} users, ${TEAMS.length} teams, ${FIXTURES.length} fixtures.`);
-  console.log(`Dev login: any username above (e.g. "directiva" / "carlos.martinez") with password "${SEED_PASSWORD}".`);
+  console.log(`Seed complete: ${PLAYERS.length + 1} users, ${TEAMS.length} teams, ${FIXTURES.length} fixtures, ${SPONSORS.length} sponsors.`);
+  console.log(`Dev login: any username above (e.g. "directiva" / "jose.manuel") with password "${SEED_PASSWORD}".`);
 }
 
 main()

@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Invictus Padel Club",
   description: "Club de pádel de Zaragoza. Cinco equipos, una misma pasión por el pádel.",
+  icons: { icon: "/branding/emblem.jpg" },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Emblem } from "./Emblem";
+import Image from "next/image";
 
 const HEADLINE = "INVICTUS";
 
@@ -23,7 +23,7 @@ export function Hero({ tagline, city }: { tagline: string; city: string }) {
         style={{ y }}
         className="pointer-events-none absolute -right-10 top-1/4 opacity-[0.07] md:right-10"
       >
-        <Emblem className="h-[420px] w-[420px] animate-spin-slow" />
+        <Image src="/branding/emblem.jpg" alt="" width={420} height={420} className="h-[420px] w-[420px] rounded-[3rem] object-cover animate-spin-slow" />
       </motion.div>
 
       <motion.div style={{ y, opacity }} className="relative z-10 flex flex-col items-center px-6 text-center">
@@ -33,7 +33,7 @@ export function Hero({ tagline, city }: { tagline: string; city: string }) {
           transition={{ delay: 0.2, duration: 0.8 }}
           className="mb-6 animate-float"
         >
-          <Emblem className="h-20 w-20" />
+          <Image src="/branding/emblem.jpg" alt="Invictus Padel Club" width={80} height={80} className="h-20 w-20 rounded-2xl object-cover shadow-lg shadow-black/50" priority />
         </motion.div>
 
         <div className="overflow-hidden">

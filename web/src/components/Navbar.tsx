@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
-import { Emblem } from "./Emblem";
 
 const PUBLIC_LINKS = [
   { href: "/", label: "Inicio" },
@@ -47,7 +47,14 @@ export function Navbar() {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-3 group">
-          <Emblem className="h-9 w-9 transition-transform duration-500 group-hover:rotate-[8deg]" />
+          <Image
+            src="/branding/emblem.jpg"
+            alt="Invictus Padel Club"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-md object-cover transition-transform duration-500 group-hover:rotate-[8deg]"
+            priority
+          />
           <span className="font-display text-lg tracking-[0.2em] text-gold-100">INVICTUS</span>
         </Link>
 

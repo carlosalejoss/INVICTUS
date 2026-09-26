@@ -55,13 +55,32 @@ verdad, dejaremos de resembrar en cada `docker compose up`).
 
 ### Credenciales de prueba (solo desarrollo)
 
-Todas las cuentas migradas usan la contraseña **`invictus2026`**. Usuarios de ejemplo:
+Todas las cuentas migradas usan la contraseña **`invictus2026`**.
 
-| Usuario | Rol | Nota |
+| Nombre | Usuario | Rol |
 |---|---|---|
-| `directiva` | Directiva | Cuenta genérica, no es un jugador real |
-| `carlos.martinez` | Capitán | Capitán de "Veteranos Senior" (dato inventado, ver más abajo) |
-| `javier.hernandez`, `jose.manuel`, ... | Jugador | Resto de la plantilla migrada |
+| Directiva Invictus | `directiva` | Directiva (cuenta genérica, no es un jugador real) |
+| Jose Manuel | `jose.manuel` | **Capitán** de Veteranos Senior |
+| Javier Hernandez | `javier.hernandez` | Jugador |
+| Jesus Cortes Langa | `jesus.cortes` | Jugador |
+| Javier Angos | `javier.angos` | Jugador |
+| Jose Angel Mores | `jose.mores` | Jugador |
+| Chema Cortes | `chema.cortes` | Jugador |
+| Jose Luis Piquer | `jose.piquer` | Jugador |
+| Marco | `marco` | Jugador |
+| Carlos Saenz | `carlos.saenz` | Jugador |
+| Carlos Martinez | `carlos.martinez` | Jugador |
+| Jose Maria Jover Gomez | `jose.jover` | Jugador |
+| Alberto Perez | `alberto.perez` | Jugador |
+| Ruben Aguilar | `ruben.aguilar` | Jugador |
+| Diego Chocarro | `diego.chocarro` | Jugador |
+| Lorenzo Linares | `lorenzo.linares` | Jugador |
+| Moises Beltran | `moises.beltran` | Jugador |
+| JJ | `jj` | Jugador |
+| Angel Garcia | `angel.garcia` | Jugador |
+| Jesus Roman | `jesus.roman` | Jugador |
+| German | `german` | Jugador |
+| Fran | `fran` | Jugador |
 
 ⚠️ Cambia estas contraseñas (o crea cuentas reales desde el panel de directiva) antes de usar esto
 fuera de tu máquina.
@@ -122,9 +141,7 @@ npm run dev
 - El Excel original registra un partido **"contra Invictus"** en las jornadas 1 y 10. Se ha asumido
   que es el calendario real de "Veteranos Senior" (posible errata o nombre de competición) — dínoslo
   si hay que corregirlo.
-- **Capitán de Veteranos Senior**: no venía indicado en el Excel; se asignó a **Carlos Martínez**
-  (el jugador con más partidos) como placeholder. Cámbialo desde `/panel/jugadores` o dinos quién es
-  el real y ajustamos el seed.
+- **Capitán de Veteranos Senior**: confirmado, es **Jose Manuel**.
 - **Jornada 17**: es la única de las 18 sin jugar. El Excel no traía rival/fecha/hora para ella, así
   que se creó con rival "Por confirmar" — complétala desde `/panel/partidos` o edítala directamente.
 - **Jornada 11** se perdió administrativamente por "error en la alineación" (nota literal del Excel,
@@ -133,8 +150,10 @@ npm run dev
   de ejemplo inventado (marcado `INVENTADO` en `seed.ts`).
 - Se crearon los 5 equipos del club (3 veteranos + 2 absolutos), pero solo **Veteranos Senior** tiene
   jugadores y calendario reales; los otros 4 están vacíos, listos para rellenar desde el panel.
-- **Patrocinadores**: la tabla se deja vacía (no había datos reales); añádelos desde
-  `/panel/patrocinadores` con nombre + logo y aparecerán automáticamente en la home.
+- **Logo del club**: los archivos reales (`web/public/branding/`) sustituyen al escudo de ejemplo que
+  se usó en la primera iteración.
+- **Patrocinadores**: los 7 logos reales facilitados por el club están en `web/public/sponsors/` y
+  sembrados en la base de datos; añade/gestiona más desde `/panel/patrocinadores`.
 - Cuentas de jugador (usuario/contraseña) son generadas para la demo, no las reales del club.
 
 ## Próximas iteraciones (ideas)

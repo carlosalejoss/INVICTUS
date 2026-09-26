@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Emblem } from "./Emblem";
+import Image from "next/image";
 
 export function Footer({ instagramUrl, followers }: { instagramUrl: string; followers?: number | null }) {
   return (
@@ -8,7 +8,7 @@ export function Footer({ instagramUrl, followers }: { instagramUrl: string; foll
         <div className="flex flex-col items-start justify-between gap-10 md:flex-row">
           <div className="max-w-sm">
             <div className="flex items-center gap-3">
-              <Emblem className="h-9 w-9" />
+              <Image src="/branding/emblem.jpg" alt="Invictus Padel Club" width={36} height={36} className="h-9 w-9 rounded-md object-cover" />
               <span className="font-display text-lg tracking-[0.2em] text-gold-100">INVICTUS</span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/50">

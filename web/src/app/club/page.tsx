@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { Counter } from "@/components/Counter";
 import { ValueCard } from "@/components/ValueCard";
-import { Emblem } from "@/components/Emblem";
 import { getClubInfo, getValues } from "@/lib/data";
 
 export const metadata: Metadata = { title: "El Club · Invictus Padel Club" };
@@ -15,9 +15,16 @@ export default async function ClubPage() {
     <div className="bg-ink-950 pb-28 pt-40">
       <div className="mx-auto max-w-5xl px-6">
         <Reveal className="text-center">
-          <Emblem className="mx-auto mb-6 h-16 w-16" />
+          <Image
+            src="/branding/logo-horizontal.jpg"
+            alt={club.name}
+            width={480}
+            height={192}
+            className="mx-auto mb-6 h-16 w-auto rounded-xl object-contain sm:h-20"
+            priority
+          />
           <p className="mb-3 text-xs uppercase tracking-[0.35em] text-gold-400">{club.city}{club.founded ? ` · Desde ${club.founded}` : ""}</p>
-          <h1 className="font-display text-5xl font-bold text-white sm:text-6xl">{club.name}</h1>
+          <h1 className="sr-only">{club.name}</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/60">{club.description}</p>
         </Reveal>
 
