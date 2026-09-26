@@ -18,59 +18,119 @@ enum MatchResult {
   PENDING
 }
 
-/// One of INVICTUS's teams (the club fields five teams; each has its own roster and calendar).
+enum Role {
+  JUGADOR
+  CAPITAN
+  DIRECTIVA
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+/// A club account: every logged-in person (jugador, capitán o directiva) is a User.
+/// Public visitors ("no jugador") never get a row here -- they just browse without a session.
+model User {
+  id              String    @id @default(cuid())
+  username        String    @unique
+  passwordHash    String
+  role            Role
+  nombre          String
+  apellidos       String
+  fechaNacimiento DateTime?
+  position        Position?
+  photoUrl        String?
+  active          Boolean   @default(true) // false = "dado de baja" (soft delete, keeps historical stats intact)
+
+  memberships       TeamMembership[]
+  availabilities    Availability[]
+  trainingSignups   TrainingSignup[]
+  asReves           FixturePair[]    @relation("RevesPlayer")
+  asDerecha         FixturePair[]    @relation("DerechaPlayer")
+  createdFixtures   Fixture[]        @relation("FixtureCreatedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Links a user to a team; a player can belong to several teams, and a captain can captain several.
+model TeamMembership {
+  id        String  @id @default(cuid())
+  isCaptain Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, teamId])
+}
+
+/// One of INVICTUS's teams.
 model Team {
-  id       String    @id @default(cuid())
-  name     String
-  category String
-  season   String
-  players  Player[]
-  fixtures Fixture[]
+  id            String  @id @default(cuid())
+  name          String
+  category      String
+  season        String
+  /// Veteran teams enforce the "Pareja 95/100/105" minimum combined-age rule in the lineup builder.
+  ageRestricted Boolean @default(false)
+
+  memberships TeamMembership[]
+  fixtures    Fixture[]
 
   createdAt DateTime @default(now())
 
   @@unique([name, season])
 }
 
-/// A club player. Stats (matchesPlayed / matchesWon) come from the season tracking sheet.
-model Player {
-  id            String    @id @default(cuid())
-  fullName      String
-  birthYear     Int?
-  age           Int?
-  position      Position?
-  matchesPlayed Int       @default(0)
-  matchesWon    Int        @default(0)
-  photoUrl      String?
+/// A league "jornada" (matchday) for a given team.
+model Fixture {
+  id       String   @id @default(cuid())
+  jornada  Int
+  opponent String?
+  date     DateTime?
+  location String?
+
+  /// Deadline for players to mark availability (normally the Wednesday at 18:00 before the match).
+  availabilityDeadline DateTime?
+
+  /// Overrides the pair-based outcome for administrative results (e.g. lost by lineup submission error).
+  manualResult MatchResult?
+  note         String?
 
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId String
 
-  asReves   FixturePair[] @relation("RevesPlayer")
-  asDerecha FixturePair[] @relation("DerechaPlayer")
+  createdBy   User?   @relation("FixtureCreatedBy", fields: [createdById], references: [id])
+  createdById String?
 
-  createdAt DateTime @default(now())
-
-  @@unique([teamId, fullName])
-}
-
-/// A "jornada" (matchday) of the league for a given team.
-model Fixture {
-  id       String        @id @default(cuid())
-  jornada  Int
-  opponent String
-  note     String?
-
-  team   Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId String
-  pairs  FixturePair[]
+  pairs          FixturePair[]
+  availabilities Availability[]
 
   createdAt DateTime @default(now())
 
   @@unique([teamId, jornada])
 }
 
-/// One pair (reves + derecha) fielded in a fixture, in a given age-index category (e.g. "PAREJA 95").
+/// A player's availability response ("disponible" / "no disponible") for a league fixture.
+model Availability {
+  id     String             @id @default(cuid())
+  status AvailabilityStatus
+
+  fixture   Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  fixtureId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  respondedAt DateTime @default(now())
+
+  @@unique([fixtureId, userId])
+}
+
+/// One pair (reves + derecha) fielded in a fixture, in a given age-index category (e.g. "Pareja 95").
 model FixturePair {
   id          String      @id @default(cuid())
   category    String
@@ -80,11 +140,61 @@ model FixturePair {
   fixture   Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
   fixtureId String
 
-  revesPlayer   Player? @relation("RevesPlayer", fields: [revesPlayerId], references: [id])
+  revesPlayer   User?   @relation("RevesPlayer", fields: [revesPlayerId], references: [id])
   revesPlayerId String?
 
-  derechaPlayer   Player? @relation("DerechaPlayer", fields: [derechaPlayerId], references: [id])
+  derechaPlayer   User?   @relation("DerechaPlayer", fields: [derechaPlayerId], references: [id])
   derechaPlayerId String?
+}
+
+/// A weekly Wednesday training slot at the club (auto-generated a few weeks ahead).
+model TrainingSession {
+  id          String   @id @default(cuid())
+  date        DateTime
+  startTime   String // "16:30" | "18:00" | "19:30" | "21:00"
+  durationMin Int      @default(90)
+  location    String   @default("Pádel Zaragoza")
+
+  signups TrainingSignup[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([date, startTime])
+}
+
+/// A sign-up for a training slot. No capacity limit -- every 4 sign-ups beyond the first court
+/// triggers a Notification asking the directiva to book another court.
+model TrainingSignup {
+  id String @id @default(cuid())
+
+  trainingSession   TrainingSession @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  trainingSessionId String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+
+  signedUpAt DateTime @default(now())
+
+  @@unique([trainingSessionId, userId])
+}
+
+/// In-app notification feed, currently used to alert the directiva that another court is needed.
+model Notification {
+  id      String  @id @default(cuid())
+  type    String
+  message String
+  read    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+/// Club sponsors shown in the "Nuestros patrocinadores" section on the homepage.
+model Sponsor {
+  id      String  @id @default(cuid())
+  name    String
+  logoUrl String
+  linkUrl String?
+  order   Int     @default(0)
+  active  Boolean @default(true)
 }
 
 /// Singleton-ish row with the club's public facts, used across the site (hero, about section, footer).

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { PlayerCard } from "@/components/PlayerCard";
-import { getPlayersRanked, getTeamWithPlayers } from "@/lib/data";
+import { getPlayersRanked, getTeamByName } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Plantilla · Invictus Padel Club" };
 export const dynamic = "force-dynamic";
 
 export default async function PlantillaPage() {
-  const [players, team] = await Promise.all([getPlayersRanked(), getTeamWithPlayers()]);
+  const [players, team] = await Promise.all([getPlayersRanked(), getTeamByName()]);
 
   const reves = players.filter((p) => p.position === "REVES");
   const derecha = players.filter((p) => p.position === "DERECHA");
@@ -34,7 +34,7 @@ export default async function PlantillaPage() {
             <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
               {reves.map((p) => (
                 <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} />
+                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} />
                 </RevealItem>
               ))}
             </RevealGroup>
@@ -49,7 +49,7 @@ export default async function PlantillaPage() {
             <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
               {derecha.map((p) => (
                 <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} />
+                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} />
                 </RevealItem>
               ))}
             </RevealGroup>
@@ -64,7 +64,7 @@ export default async function PlantillaPage() {
             <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
               {sinPosicion.map((p) => (
                 <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} />
+                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} />
                 </RevealItem>
               ))}
             </RevealGroup>

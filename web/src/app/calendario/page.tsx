@@ -25,9 +25,19 @@ export default async function CalendarioPage() {
           {fixtures.map((fx, i) => (
             <FixtureCard
               key={fx.id}
+              id={fx.id}
               jornada={fx.jornada}
               opponent={fx.opponent}
-              pairs={fx.pairs}
+              manualResult={fx.manualResult}
+              note={fx.note}
+              pairs={fx.pairs.map((p) => ({
+                id: p.id,
+                category: p.category,
+                combinedAge: p.combinedAge,
+                result: p.result,
+                revesPlayer: p.revesPlayer ? { fullName: `${p.revesPlayer.nombre} ${p.revesPlayer.apellidos}`.trim() } : null,
+                derechaPlayer: p.derechaPlayer ? { fullName: `${p.derechaPlayer.nombre} ${p.derechaPlayer.apellidos}`.trim() } : null,
+              }))}
               index={i}
             />
           ))}

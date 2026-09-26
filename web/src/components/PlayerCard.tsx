@@ -9,6 +9,7 @@ export function PlayerCard({
   played,
   won,
   rate,
+  isCaptain,
 }: {
   name: string;
   position?: string | null;
@@ -16,6 +17,7 @@ export function PlayerCard({
   played: number;
   won: number;
   rate: number;
+  isCaptain?: boolean;
 }) {
   const initials = name
     .split(" ")
@@ -37,7 +39,14 @@ export function PlayerCard({
           {initials}
         </div>
         <div className="min-w-0">
-          <h3 className="truncate font-semibold text-white">{name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="truncate font-semibold text-white">{name}</h3>
+            {isCaptain && (
+              <span className="shrink-0 rounded-full border border-gold-500/40 bg-gold-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold-300">
+                Capitán
+              </span>
+            )}
+          </div>
           <p className="text-xs uppercase tracking-wide text-white/40">
             {position === "REVES" ? "Revés" : position === "DERECHA" ? "Derecha" : "—"}
             {age ? ` · ${age} años` : ""}

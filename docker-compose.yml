@@ -27,6 +27,14 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-invictus}:${POSTGRES_PASSWORD:-invictus_dev_password}@db:5432/${POSTGRES_DB:-invictus}?schema=public
       NODE_ENV: production
+      AUTH_SECRET: ${AUTH_SECRET:-dev-only-change-me-1c9f6b2a7e4d4f0b9a3c8e5d2f1b6a9c}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-Invictus Padel Club <no-reply@invictuspadel.local>}
+      NOTIFY_EMAIL_TO: ${NOTIFY_EMAIL_TO:-directiva@invictuspadel.local}
     ports:
       - "3000:3000"
 

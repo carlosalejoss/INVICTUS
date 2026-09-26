@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 import { Emblem } from "./Emblem";
 
-const LINKS = [
+const PUBLIC_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/club", label: "El Club" },
   { href: "/plantilla", label: "Plantilla" },
@@ -13,9 +14,16 @@ const LINKS = [
   { href: "/calendario", label: "Calendario" },
 ];
 
+const ROLE_LABEL: Record<string, string> = {
+  JUGADOR: "Jugador",
+  CAPITAN: "Capitán",
+  DIRECTIVA: "Directiva",
+};
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -23,6 +31,10 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const links = session
+    ? [...PUBLIC_LINKS, { href: "/entrenamientos", label: "Entrenamientos" }]
+    : PUBLIC_LINKS;
 
   return (
     <motion.header
@@ -39,8 +51,8 @@ export function Navbar() {
           <span className="font-display text-lg tracking-[0.2em] text-gold-100">INVICTUS</span>
         </Link>
 
-        <nav className="hidden gap-8 md:flex">
-          {LINKS.map((l) => (
+        <nav className="hidden gap-7 md:flex">
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -49,16 +61,36 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          {session && (session.user.role === "CAPITAN" || session.user.role === "DIRECTIVA") && (
+            <Link href="/panel" className="text-sm font-medium tracking-wide text-gold-300 hover:text-gold-200">
+              Panel
+            </Link>
+          )}
         </nav>
 
-        <a
-          href="https://www.instagram.com/invictuspadel/"
-          target="_blank"
-          rel="noreferrer"
-          className="hidden rounded-full border border-gold-500/40 px-4 py-1.5 text-sm text-gold-200 transition-colors hover:bg-gold-500/10 md:block"
-        >
-          Instagram
-        </a>
+        <div className="hidden items-center gap-3 md:flex">
+          {status === "loading" ? null : session ? (
+            <>
+              <Link href="/cuenta" className="text-right text-xs leading-tight text-white/60 hover:text-gold-300">
+                <span className="block text-white/80">{session.user.name}</span>
+                <span className="text-gold-400">{ROLE_LABEL[session.user.role]}</span>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="rounded-full border border-white/15 px-4 py-1.5 text-sm text-white/70 transition-colors hover:border-gold-500/40 hover:text-gold-200"
+              >
+                Salir
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full border border-gold-500/40 px-4 py-1.5 text-sm text-gold-200 transition-colors hover:bg-gold-500/10"
+            >
+              Iniciar sesión
+            </Link>
+          )}
+        </div>
 
         <button
           className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 md:hidden"
@@ -78,7 +110,7 @@ export function Navbar() {
           exit={{ height: 0, opacity: 0 }}
           className="flex flex-col gap-1 border-t border-white/5 bg-ink-950/95 px-6 py-4 md:hidden"
         >
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -88,6 +120,30 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          {session && (session.user.role === "CAPITAN" || session.user.role === "DIRECTIVA") && (
+            <Link href="/panel" onClick={() => setOpen(false)} className="rounded-lg px-3 py-3 text-sm text-gold-300 hover:bg-white/5">
+              Panel
+            </Link>
+          )}
+          <div className="mt-2 border-t border-white/5 pt-3">
+            {session ? (
+              <>
+                <Link href="/cuenta" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5">
+                  {session.user.name} · {ROLE_LABEL[session.user.role]}
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-white/70 hover:bg-white/5"
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <Link href="/login" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-gold-300 hover:bg-white/5">
+                Iniciar sesión
+              </Link>
+            )}
+          </div>
         </motion.nav>
       )}
     </motion.header>

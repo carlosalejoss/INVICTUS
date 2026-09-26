@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { fixtureOutcome, type Outcome } from "@/lib/matches";
 
 type Pair = {
   id: string;
@@ -11,33 +13,36 @@ type Pair = {
   derechaPlayer: { fullName: string } | null;
 };
 
-const RESULT_STYLES: Record<Pair["result"], string> = {
+const RESULT_STYLES: Record<Outcome, string> = {
   WON: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   LOST: "bg-rose-500/15 text-rose-300 border-rose-500/30",
   PENDING: "bg-white/5 text-white/50 border-white/10",
 };
 
-const RESULT_LABEL: Record<Pair["result"], string> = {
+const RESULT_LABEL: Record<Outcome, string> = {
   WON: "Ganado",
   LOST: "Perdido",
   PENDING: "Pendiente",
 };
 
 export function FixtureCard({
+  id,
   jornada,
   opponent,
   pairs,
+  manualResult,
+  note,
   index,
 }: {
+  id: string;
   jornada: number;
-  opponent: string;
+  opponent: string | null;
   pairs: Pair[];
+  manualResult?: Outcome | null;
+  note?: string | null;
   index: number;
 }) {
-  const won = pairs.filter((p) => p.result === "WON").length;
-  const lost = pairs.filter((p) => p.result === "LOST").length;
-  const decided = won + lost === pairs.length && pairs.length > 0;
-  const teamResult: Pair["result"] = !decided ? "PENDING" : won > lost ? "WON" : "LOST";
+  const teamResult = fixtureOutcome({ manualResult: manualResult ?? null, pairs });
 
   return (
     <motion.div
@@ -54,13 +59,15 @@ export function FixtureCard({
           </span>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-white/40">Jornada {jornada}</p>
-            <p className="font-semibold text-white">vs {opponent}</p>
+            <p className="font-semibold text-white">vs {opponent ?? "Por confirmar"}</p>
           </div>
         </div>
         <span className={`rounded-full border px-3 py-1 text-xs font-medium ${RESULT_STYLES[teamResult]}`}>
-          {pairs.length === 0 ? "Sin datos" : RESULT_LABEL[teamResult]}
+          {RESULT_LABEL[teamResult]}
         </span>
       </div>
+
+      {note && <p className="mt-3 text-xs italic text-white/40">{note}</p>}
 
       {pairs.length > 0 && (
         <div className="mt-4 grid gap-2 border-t border-white/5 pt-4 sm:grid-cols-3">
@@ -80,6 +87,16 @@ export function FixtureCard({
             </div>
           ))}
         </div>
+      )}
+
+      {teamResult === "PENDING" && (
+        <Link
+          href={`/partidos/${id}`}
+          className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-gold-300 hover:text-gold-200"
+        >
+          Ver partido y apuntarme
+          <span aria-hidden>→</span>
+        </Link>
       )}
     </motion.div>
   );

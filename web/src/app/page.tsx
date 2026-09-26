@@ -4,17 +4,19 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { Counter } from "@/components/Counter";
 import { ValueCard } from "@/components/ValueCard";
 import { PlayerCard } from "@/components/PlayerCard";
-import { getClubInfo, getValues, getPlayersRanked, getTeamSummary, getTeamWithPlayers } from "@/lib/data";
+import { getClubInfo, getValues, getPlayersRanked, getTeamSummary, getTeamByName, getSponsors } from "@/lib/data";
+import { SponsorStrip } from "@/components/SponsorStrip";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [club, values, players, summary, team] = await Promise.all([
+  const [club, values, players, summary, team, sponsors] = await Promise.all([
     getClubInfo(),
     getValues(),
     getPlayersRanked(),
     getTeamSummary(),
-    getTeamWithPlayers(),
+    getTeamByName(),
+    getSponsors(),
   ]);
 
   const topPlayers = players.filter((p) => p.matchesPlayed > 0).slice(0, 3);
@@ -102,6 +104,7 @@ export default async function HomePage() {
                   played={p.matchesPlayed}
                   won={p.matchesWon}
                   rate={p.rate}
+                  isCaptain={p.isCaptain}
                 />
               </RevealItem>
             ))}
@@ -144,6 +147,8 @@ export default async function HomePage() {
           </Reveal>
         </div>
       </section>
+
+      {sponsors.length > 0 && <SponsorStrip sponsors={sponsors} />}
     </>
   );
 }

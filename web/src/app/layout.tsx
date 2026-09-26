@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 import { getClubInfo } from "@/lib/data";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -21,9 +22,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="es" className={`${sans.variable} ${display.variable}`}>
       <body className="font-sans antialiased">
-        <Navbar />
-        <main>{children}</main>
-        <Footer instagramUrl={club.instagramUrl} followers={club.followers} />
+        <SessionProviderWrapper>
+          <Navbar />
+          <main>{children}</main>
+          <Footer instagramUrl={club.instagramUrl} followers={club.followers} />
+        </SessionProviderWrapper>
       </body>
     </html>
   );

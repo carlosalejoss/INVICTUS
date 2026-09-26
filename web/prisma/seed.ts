@@ -1,40 +1,56 @@
-import { PrismaClient, Position, MatchResult } from "@prisma/client";
+import { PrismaClient, Position, MatchResult, Role } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const TEAM = { name: "Veteranos Senior", category: "Veteranos +45 / Senior", season: "2025/2026" };
+const SEASON = "2025/2026";
 
-// Roster + season stats, migrated from "AA VETERANOS SENIOR CLUB.numbers" (hojas PAREJAS / Hoja 1 / COMBINACIONES).
-// Names are normalized (trimmed, de-duplicated spelling variants found in the original sheet).
+// DEV-ONLY password shared by every seeded account. Change these credentials (or better, recreate
+// the real accounts from the directiva panel) before using this outside a local demo.
+const SEED_PASSWORD = "invictus2026";
+
+const TEAMS = [
+  { name: "Veteranos Senior", category: "Veteranos +45 / Senior", season: SEASON, ageRestricted: true },
+  { name: "Veteranos 2", category: "Veteranos", season: SEASON, ageRestricted: true },
+  { name: "Veteranos 3", category: "Veteranos", season: SEASON, ageRestricted: true },
+  { name: "Absoluto 1", category: "Absoluto", season: SEASON, ageRestricted: false },
+  { name: "Absoluto 2", category: "Absoluto", season: SEASON, ageRestricted: false },
+];
+
+// Roster + season stats, migrated from "AA VETERANOS SENIOR CLUB.numbers" (hojas PAREJAS / Hoja 1 /
+// COMBINACIONES). Every player becomes a login-capable User. `username` is generated for the demo
+// (there's no real one in the source spreadsheet) -- flagged in the project README.
+// CAPITAN: no captain was recorded in the source file; Carlos Martinez (most matches played) was
+// picked as a placeholder -- tell us the real captain and we'll fix it.
 const PLAYERS: Array<{
   name: string;
+  username: string;
+  role: Role;
   birthYear: number | null;
-  age: number | null;
+  age: number | null; // used only to approximate fechaNacimiento when birthYear is unknown
   position: Position | null;
-  played: number;
-  won: number;
 }> = [
-  { name: "Javier Hernandez", birthYear: null, age: 42, position: "REVES", played: 9, won: 4 },
-  { name: "Jesus Cortes Langa", birthYear: null, age: 42, position: "REVES", played: 1, won: 1 },
-  { name: "Javier Angos", birthYear: 1979, age: 47, position: "REVES", played: 9, won: 3 },
-  { name: "Jose Angel Mores", birthYear: null, age: 46, position: "REVES", played: 0, won: 0 },
-  { name: "Chema Cortes", birthYear: 1977, age: 49, position: "REVES", played: 4, won: 1 },
-  { name: "Jose Luis Piquer", birthYear: null, age: 50, position: "REVES", played: 0, won: 0 },
-  { name: "Marco", birthYear: 1974, age: 52, position: "REVES", played: 2, won: 0 },
-  { name: "Carlos Saenz", birthYear: 1971, age: 55, position: "REVES", played: 0, won: 0 },
-  { name: "Carlos Martinez", birthYear: 1970, age: 56, position: "REVES", played: 14, won: 5 },
-  { name: "Jose Maria Jover Gomez", birthYear: null, age: 60, position: "REVES", played: 1, won: 0 },
-  { name: "Alberto Perez", birthYear: null, age: 43, position: "DERECHA", played: 1, won: 1 },
-  { name: "Ruben Aguilar", birthYear: 1982, age: 44, position: "DERECHA", played: 3, won: 0 },
-  { name: "Diego Chocarro", birthYear: 1981, age: 45, position: "DERECHA", played: 5, won: 2 },
-  { name: "Lorenzo Linares", birthYear: null, age: 49, position: "DERECHA", played: 3, won: 0 },
-  { name: "Moises Beltran", birthYear: 1976, age: 50, position: "DERECHA", played: 11, won: 4 },
-  { name: "JJ", birthYear: null, age: 52, position: "DERECHA", played: 2, won: 0 },
-  { name: "Jose Manuel", birthYear: 1971, age: 55, position: "DERECHA", played: 12, won: 6 },
-  { name: "Angel Garcia", birthYear: 1970, age: 56, position: "DERECHA", played: 5, won: 1 },
-  { name: "Jesus Roman", birthYear: 1969, age: 57, position: "DERECHA", played: 12, won: 4 },
-  { name: "German", birthYear: null, age: 61, position: "DERECHA", played: 0, won: 0 },
-  { name: "Fran", birthYear: null, age: 60, position: "DERECHA", played: 2, won: 0 },
+  { name: "Javier Hernandez", username: "javier.hernandez", role: "JUGADOR", birthYear: null, age: 42, position: "REVES" },
+  { name: "Jesus Cortes Langa", username: "jesus.cortes", role: "JUGADOR", birthYear: null, age: 42, position: "REVES" },
+  { name: "Javier Angos", username: "javier.angos", role: "JUGADOR", birthYear: 1979, age: 47, position: "REVES" },
+  { name: "Jose Angel Mores", username: "jose.mores", role: "JUGADOR", birthYear: null, age: 46, position: "REVES" },
+  { name: "Chema Cortes", username: "chema.cortes", role: "JUGADOR", birthYear: 1977, age: 49, position: "REVES" },
+  { name: "Jose Luis Piquer", username: "jose.piquer", role: "JUGADOR", birthYear: null, age: 50, position: "REVES" },
+  { name: "Marco", username: "marco", role: "JUGADOR", birthYear: 1974, age: 52, position: "REVES" },
+  { name: "Carlos Saenz", username: "carlos.saenz", role: "JUGADOR", birthYear: 1971, age: 55, position: "REVES" },
+  { name: "Carlos Martinez", username: "carlos.martinez", role: "CAPITAN", birthYear: 1970, age: 56, position: "REVES" },
+  { name: "Jose Maria Jover Gomez", username: "jose.jover", role: "JUGADOR", birthYear: null, age: 60, position: "REVES" },
+  { name: "Alberto Perez", username: "alberto.perez", role: "JUGADOR", birthYear: null, age: 43, position: "DERECHA" },
+  { name: "Ruben Aguilar", username: "ruben.aguilar", role: "JUGADOR", birthYear: 1982, age: 44, position: "DERECHA" },
+  { name: "Diego Chocarro", username: "diego.chocarro", role: "JUGADOR", birthYear: 1981, age: 45, position: "DERECHA" },
+  { name: "Lorenzo Linares", username: "lorenzo.linares", role: "JUGADOR", birthYear: null, age: 49, position: "DERECHA" },
+  { name: "Moises Beltran", username: "moises.beltran", role: "JUGADOR", birthYear: 1976, age: 50, position: "DERECHA" },
+  { name: "JJ", username: "jj", role: "JUGADOR", birthYear: null, age: 52, position: "DERECHA" },
+  { name: "Jose Manuel", username: "jose.manuel", role: "JUGADOR", birthYear: 1971, age: 55, position: "DERECHA" },
+  { name: "Angel Garcia", username: "angel.garcia", role: "JUGADOR", birthYear: 1970, age: 56, position: "DERECHA" },
+  { name: "Jesus Roman", username: "jesus.roman", role: "JUGADOR", birthYear: 1969, age: 57, position: "DERECHA" },
+  { name: "German", username: "german", role: "JUGADOR", birthYear: null, age: 61, position: "DERECHA" },
+  { name: "Fran", username: "fran", role: "JUGADOR", birthYear: null, age: 60, position: "DERECHA" },
 ];
 
 // Some pair rows in the original sheet used slightly different spellings for the same player.
@@ -51,7 +67,6 @@ function normalizeName(raw: string): string {
   const trimmed = raw.trim().replace(/\s+/g, " ");
   const upper = trimmed.toUpperCase();
   if (NAME_ALIASES[upper]) return NAME_ALIASES[upper];
-  // Title-case fallback for names not in the roster/alias table (kept as their own player record).
   return trimmed
     .toLowerCase()
     .split(" ")
@@ -59,13 +74,22 @@ function normalizeName(raw: string): string {
     .join(" ");
 }
 
-// Calendar migrated from the "PAREJAS" sheet (jornada-by-jornada pair assignments and results).
-// result: true = won, false = lost, null = not played yet / not recorded in the source sheet.
-const FIXTURES: Array<{
+type PairSeed = { category: string; combinedAge: number | null; reves: string; derecha: string; result: boolean | null };
+type FixtureSeed = {
   jornada: number;
-  opponent: string;
-  pairs: Array<{ category: string; combinedAge: number | null; reves: string; derecha: string; result: boolean | null }>;
-}> = [
+  opponent: string | null;
+  pairs: PairSeed[];
+  manualResult?: "WON" | "LOST";
+  note?: string;
+};
+
+// Calendar migrated from the "PAREJAS" sheet (jornada-by-jornada pair assignments and results).
+// result: true = won, false = lost, null = genuinely not played yet.
+// IMPORTANT rule (confirmed by the club): a blank result cell in an ALREADY PLAYED jornada counts
+// as a loss for that pair (captains stopped recording a pair once the tie was mathematically
+// decided by the other two). Applying that rule here reproduces the "Hoja 1" stats table exactly.
+// Jornada 17 is the only one not played yet, so its pairs are left as `null` (genuinely pending).
+const FIXTURES: FixtureSeed[] = [
   { jornada: 1, opponent: "C.D. Invictus", pairs: [
     { category: "Pareja 95", combinedAge: 97, reves: "JAVIER HERNANDEZ", derecha: "JOSE MANUEL", result: false },
     { category: "Pareja 100", combinedAge: 100, reves: "CARLOS MARTINEZ", derecha: "RUBEN AGUILAR", result: false },
@@ -98,29 +122,35 @@ const FIXTURES: Array<{
   ]},
   { jornada: 7, opponent: "Huesca", pairs: [
     { category: "Pareja 95", combinedAge: 97, reves: "JAVIER HERNANDEZ", derecha: "JOSE MANUEL", result: true },
-    { category: "Pareja 100", combinedAge: 103, reves: "JAVIER ANGOS", derecha: "ANGEL GARCIA", result: null },
-    { category: "Pareja 105", combinedAge: 105, reves: "CARLOS MARTINEZ", derecha: "LORENZO LINARES", result: null },
+    { category: "Pareja 100", combinedAge: 103, reves: "JAVIER ANGOS", derecha: "ANGEL GARCIA", result: false },
+    { category: "Pareja 105", combinedAge: 105, reves: "CARLOS MARTINEZ", derecha: "LORENZO LINARES", result: false },
   ]},
   { jornada: 8, opponent: "Regal", pairs: [
     { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: true },
     { category: "Pareja 100", combinedAge: 102, reves: "JAVIER ANGOS", derecha: "JOSE MANUEL", result: true },
-    { category: "Pareja 105", combinedAge: 108, reves: "MARCO", derecha: "ANGEL GARCIA", result: null },
+    { category: "Pareja 105", combinedAge: 108, reves: "MARCO", derecha: "ANGEL GARCIA", result: false },
   ]},
   { jornada: 9, opponent: "RCTZ", pairs: [
     { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: true },
     { category: "Pareja 100", combinedAge: 103, reves: "JAVIER ANGOS", derecha: "ANGEL GARCIA", result: true },
-    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: null },
+    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: false },
   ]},
   { jornada: 10, opponent: "C.D. Invictus", pairs: [
-    { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: null },
-    { category: "Pareja 100", combinedAge: 102, reves: "JAVIER ANGOS", derecha: "JOSE MANUEL", result: null },
-    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: null },
+    { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: false },
+    { category: "Pareja 100", combinedAge: 102, reves: "JAVIER ANGOS", derecha: "JOSE MANUEL", result: false },
+    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: false },
   ]},
-  { jornada: 11, opponent: "Good Training", pairs: [] },
+  {
+    jornada: 11,
+    opponent: "Good Training",
+    pairs: [],
+    manualResult: "LOST",
+    note: "Derrota administrativa: error en la alineación presentada.",
+  },
   { jornada: 12, opponent: "SEIBAT", pairs: [
-    { category: "Pareja 95", combinedAge: 95, reves: "DIEGO CHOCARRO", derecha: "MOISES BELTRAN", result: null },
-    { category: "Pareja 100", combinedAge: 101, reves: "RUBEN AGUILAR", derecha: "JESUS ROMAN", result: null },
-    { category: "Pareja 105", combinedAge: 115, reves: "JOSE MANUEL", derecha: "FRAN", result: null },
+    { category: "Pareja 95", combinedAge: 95, reves: "DIEGO CHOCARRO", derecha: "MOISES BELTRAN", result: false },
+    { category: "Pareja 100", combinedAge: 101, reves: "RUBEN AGUILAR", derecha: "JESUS ROMAN", result: false },
+    { category: "Pareja 105", combinedAge: 115, reves: "JOSE MANUEL", derecha: "FRAN", result: false },
   ]},
   { jornada: 13, opponent: "Padeltroters", pairs: [
     { category: "Pareja 95", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: true },
@@ -128,22 +158,33 @@ const FIXTURES: Array<{
     { category: "Pareja 105", combinedAge: 106, reves: "CHEMA CORTES", derecha: "JESUS ROMAN", result: true },
   ]},
   { jornada: 14, opponent: "Portazgo", pairs: [
-    { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: null },
-    { category: "Pareja 100", combinedAge: 107, reves: "JOSE MANUEL", derecha: "JJ", result: null },
-    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: null },
+    { category: "Pareja 95", combinedAge: 99, reves: "JAVIER HERNANDEZ", derecha: "JESUS ROMAN", result: false },
+    { category: "Pareja 100", combinedAge: 107, reves: "JOSE MANUEL", derecha: "JJ", result: false },
+    { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: false },
   ]},
   { jornada: 15, opponent: "Teruel", pairs: [
     { category: "Pareja 95", combinedAge: 97, reves: "JESUS CORTES LANGA", derecha: "JOSE MANUEL", result: true },
-    { category: "Pareja 100", combinedAge: 102, reves: "MARCO", derecha: "MOISES BELTRAN", result: null },
-    { category: "Pareja 105", combinedAge: 105, reves: "CARLOS MARTINEZ", derecha: "LORENZO LINARES", result: null },
+    { category: "Pareja 100", combinedAge: 102, reves: "MARCO", derecha: "MOISES BELTRAN", result: false },
+    { category: "Pareja 105", combinedAge: 105, reves: "CARLOS MARTINEZ", derecha: "LORENZO LINARES", result: false },
   ]},
   { jornada: 16, opponent: "Huesca", pairs: [
     { category: "Pareja 95", combinedAge: 98, reves: "ALBERTO PEREZ", derecha: "JOSE MANUEL", result: true },
-    { category: "Pareja 100", combinedAge: 106, reves: "CHEMA CORTES", derecha: "JESUS ROMAN", result: null },
+    { category: "Pareja 100", combinedAge: 106, reves: "CHEMA CORTES", derecha: "JESUS ROMAN", result: false },
     { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: true },
   ]},
+  {
+    // Not played yet -- the only jornada still pending this season. No opponent/date recorded in
+    // the source sheet; create the real match from the directiva/capitán panel once scheduled.
+    jornada: 17,
+    opponent: null,
+    pairs: [
+      { category: "Pareja 95", combinedAge: 104, reves: "JAVIER ANGOS", derecha: "JESUS ROMAN", result: null },
+      { category: "Pareja 100", combinedAge: 106, reves: "MOISES BELTRAN", derecha: "ANGEL GARCIA", result: null },
+      { category: "Pareja 105", combinedAge: 109, reves: "CHEMA CORTES", derecha: "FRAN", result: null },
+    ],
+  },
   { jornada: 18, opponent: "RCTZ", pairs: [
-    { category: "Pareja 95", combinedAge: 112, reves: "JOSE MARIA JOVER GOMEZ", derecha: "JJ", result: null },
+    { category: "Pareja 95", combinedAge: 112, reves: "JOSE MARIA JOVER GOMEZ", derecha: "JJ", result: false },
     { category: "Pareja 100", combinedAge: 100, reves: "DIEGO CHOCARRO", derecha: "JOSE MANUEL", result: true },
     { category: "Pareja 105", combinedAge: 106, reves: "CARLOS MARTINEZ", derecha: "MOISES BELTRAN", result: true },
   ]},
@@ -182,49 +223,92 @@ function toMatchResult(result: boolean | null): MatchResult {
   return MatchResult.PENDING;
 }
 
+// Only the year is known for most players (source sheet gives birth year OR current age, never a
+// full date), so every fechaNacimiento here is January 1st of the relevant year -- an approximation.
+function approximateBirthDate(birthYear: number | null, age: number | null): Date | null {
+  const year = birthYear ?? (age !== null ? SEASON_REFERENCE_YEAR - age : null);
+  if (year === null) return null;
+  return new Date(Date.UTC(year, 0, 1));
+}
+
+const SEASON_REFERENCE_YEAR = 2026;
+
 async function main() {
   console.log("Seeding database...");
 
+  await prisma.notification.deleteMany();
+  await prisma.trainingSignup.deleteMany();
+  await prisma.trainingSession.deleteMany();
+  await prisma.availability.deleteMany();
   await prisma.fixturePair.deleteMany();
   await prisma.fixture.deleteMany();
-  await prisma.player.deleteMany();
+  await prisma.teamMembership.deleteMany();
+  await prisma.user.deleteMany();
   await prisma.team.deleteMany();
   await prisma.clubInfo.deleteMany();
   await prisma.value.deleteMany();
+  await prisma.sponsor.deleteMany();
 
-  const team = await prisma.team.create({ data: TEAM });
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
 
-  const playersByName = new Map<string, string>(); // normalized name -> id
+  const teamsByName = new Map<string, string>(); // name -> id
+  for (const t of TEAMS) {
+    const created = await prisma.team.create({ data: t });
+    teamsByName.set(t.name, created.id);
+  }
+  const veteranosSeniorId = teamsByName.get("Veteranos Senior")!;
+
+  const usersByName = new Map<string, string>(); // normalized full name -> id
   for (const p of PLAYERS) {
-    const created = await prisma.player.create({
+    const created = await prisma.user.create({
       data: {
-        fullName: p.name,
-        birthYear: p.birthYear,
-        age: p.age,
+        username: p.username,
+        passwordHash,
+        role: p.role,
+        nombre: p.name.split(" ")[0],
+        apellidos: p.name.split(" ").slice(1).join(" "),
+        fechaNacimiento: approximateBirthDate(p.birthYear, p.age),
         position: p.position,
-        matchesPlayed: p.played,
-        matchesWon: p.won,
-        teamId: team.id,
       },
     });
-    playersByName.set(p.name, created.id);
+    usersByName.set(p.name, created.id);
+    await prisma.teamMembership.create({
+      data: { userId: created.id, teamId: veteranosSeniorId, isCaptain: p.role === "CAPITAN" },
+    });
   }
 
-  // Any player referenced in a fixture pair but missing from the roster table gets created on the fly.
+  // Standalone directiva account (not a real player) for logging in to the panel.
+  await prisma.user.create({
+    data: {
+      username: "directiva",
+      passwordHash,
+      role: "DIRECTIVA",
+      nombre: "Directiva",
+      apellidos: "Invictus",
+    },
+  });
+
+  // Any player referenced in a fixture pair but missing from the roster gets created on the fly.
   async function resolvePlayerId(rawName: string): Promise<string> {
     const normalized = normalizeName(rawName);
-    const existing = playersByName.get(normalized);
+    const existing = usersByName.get(normalized);
     if (existing) return existing;
-    const created = await prisma.player.create({
-      data: { fullName: normalized, teamId: team.id },
+    const created = await prisma.user.create({
+      data: { username: normalized.toLowerCase().replace(/\s+/g, "."), passwordHash, role: "JUGADOR", nombre: normalized, apellidos: "" },
     });
-    playersByName.set(normalized, created.id);
+    usersByName.set(normalized, created.id);
     return created.id;
   }
 
   for (const fx of FIXTURES) {
     const fixture = await prisma.fixture.create({
-      data: { jornada: fx.jornada, opponent: fx.opponent, teamId: team.id },
+      data: {
+        jornada: fx.jornada,
+        opponent: fx.opponent,
+        teamId: veteranosSeniorId,
+        manualResult: fx.manualResult ? MatchResult[fx.manualResult] : null,
+        note: fx.note,
+      },
     });
 
     for (const pair of fx.pairs) {
@@ -248,7 +332,8 @@ async function main() {
     await prisma.value.create({ data: v });
   }
 
-  console.log(`Seed complete: ${PLAYERS.length} players, ${FIXTURES.length} fixtures.`);
+  console.log(`Seed complete: ${PLAYERS.length + 1} users, ${TEAMS.length} teams, ${FIXTURES.length} fixtures.`);
+  console.log(`Dev login: any username above (e.g. "directiva" / "carlos.martinez") with password "${SEED_PASSWORD}".`);
 }
 
 main()
