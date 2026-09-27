@@ -106,8 +106,11 @@ Docker Compose es para local. Para que la web sea accesible por internet sin cos
      panel de directiva).
    - (Opcional pero recomendado) `BLOB_READ_WRITE_TOKEN` para que los jugadores puedan subir su foto
      de perfil desde `/cuenta`: en tu proyecto de Vercel ve a **Storage → Create Database → Blob**
-     (gratis), y copia el token que te da a esta variable. Sin ella, el resto del perfil se sigue
-     pudiendo editar, pero la subida de foto muestra un aviso.
+     (gratis) y elige **acceso "Public"** al crearlo -- con "Private" las fotos se suben pero no se
+     pueden mostrar en la web (falla con `Cannot use public access on a private store`). Copia el
+     token del store (dentro del store → Settings, no en la configuración del proyecto) a esta
+     variable. Sin ella, el resto del perfil se sigue pudiendo editar, pero la subida de foto muestra
+     un aviso. Tras añadirla/cambiarla en Vercel hace falta un **Redeploy** manual para que se aplique.
 4. **Deploy**. Vercel instala dependencias (esto ejecuta `prisma generate` automáticamente vía el
    script `postinstall`) y construye el sitio.
 5. **Siembra la base de datos una sola vez** (crea las tablas y carga jugadores/equipos/temporada).
