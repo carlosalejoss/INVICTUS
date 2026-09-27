@@ -18,12 +18,18 @@ export function Hero({ tagline, city }: { tagline: string; city: string }) {
       <motion.div style={{ scale }} className="absolute inset-0 bg-radial-fade" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(5,5,5,0.4)_70%,rgba(5,5,5,1)_100%)]" />
 
-      {/* Ambient floating emblem */}
+      {/* Ambient emblem, centered behind the title on every viewport size */}
       <motion.div
         style={{ y }}
-        className="pointer-events-none absolute -right-10 top-1/4 opacity-[0.07] md:right-10"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]"
       >
-        <Image src="/branding/emblem.jpg" alt="" width={420} height={420} className="h-[420px] w-[420px] rounded-[3rem] object-cover animate-spin-slow" />
+        <Image
+          src="/branding/emblem.jpg"
+          alt=""
+          width={800}
+          height={800}
+          className="h-[85vmin] w-[85vmin] max-h-[640px] max-w-[640px] rounded-[3rem] object-cover animate-spin-slow"
+        />
       </motion.div>
 
       <motion.div style={{ y, opacity }} className="relative z-10 flex flex-col items-center px-6 text-center">

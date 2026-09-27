@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { fixtureOutcome } from "@/lib/matches";
+import { ensureUpcomingTrainingSessions } from "@/lib/training";
 
 // Only "Veteranos Senior" has real roster/calendar data migrated so far; the public site defaults
 // to it until a team switcher is built. The other 4 club teams exist in the DB, ready to fill in.
@@ -79,6 +80,8 @@ export async function getPlayersRanked(teamName: string = DEFAULT_TEAM_NAME) {
         age: ageFromBirthDate(m.user.fechaNacimiento),
         isCaptain: m.isCaptain,
         role: m.user.role,
+        injured: m.user.injured,
+        photoUrl: m.user.photoUrl,
         matchesPlayed: s.played,
         matchesWon: s.won,
         rate: winRate(s.played, s.won),
@@ -135,4 +138,28 @@ export async function getTeamSummary(teamName: string = DEFAULT_TEAM_NAME) {
     jornadasPending,
     totalJornadas: fixtures.length,
   };
+}
+
+/** The nearest not-yet-decided league fixture across every team a user belongs to. */
+export async function getNextFixtureForUser(userId: string) {
+  const memberships = await prisma.teamMembership.findMany({ where: { userId }, select: { teamId: true } });
+  const teamIds = memberships.map((m) => m.teamId);
+  if (teamIds.length === 0) return null;
+
+  const fixtures = await prisma.fixture.findMany({
+    where: { teamId: { in: teamIds } },
+    include: { team: true, pairs: true },
+    orderBy: [{ date: "asc" }, { jornada: "asc" }],
+  });
+
+  return fixtures.find((fx) => fixtureOutcome(fx) === "PENDING") ?? null;
+}
+
+/** The single nearest upcoming training slot (full list lives on /entrenamientos). */
+export async function getNextTrainingSession() {
+  await ensureUpcomingTrainingSessions();
+  return prisma.trainingSession.findFirst({
+    where: { date: { gte: new Date(new Date().setUTCHours(0, 0, 0, 0)) } },
+    orderBy: [{ date: "asc" }, { startTime: "asc" }],
+  });
 }

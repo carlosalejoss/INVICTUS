@@ -4,19 +4,35 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { Counter } from "@/components/Counter";
 import { ValueCard } from "@/components/ValueCard";
 import { PlayerCard } from "@/components/PlayerCard";
-import { getClubInfo, getValues, getPlayersRanked, getTeamSummary, getTeamByName, getSponsors } from "@/lib/data";
+import { NextUpSection } from "@/components/NextUpSection";
+import {
+  getClubInfo,
+  getValues,
+  getPlayersRanked,
+  getTeamSummary,
+  getTeamByName,
+  getSponsors,
+  getNextFixtureForUser,
+  getNextTrainingSession,
+} from "@/lib/data";
 import { SponsorStrip } from "@/components/SponsorStrip";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [club, values, players, summary, team, sponsors] = await Promise.all([
+  const session = await auth();
+  const showNextUp = session && (session.user.role === "JUGADOR" || session.user.role === "CAPITAN");
+
+  const [club, values, players, summary, team, sponsors, nextFixture, nextTraining] = await Promise.all([
     getClubInfo(),
     getValues(),
     getPlayersRanked(),
     getTeamSummary(),
     getTeamByName(),
     getSponsors(),
+    showNextUp ? getNextFixtureForUser(session.user.id) : Promise.resolve(null),
+    showNextUp ? getNextTrainingSession() : Promise.resolve(null),
   ]);
 
   const topPlayers = players.filter((p) => p.matchesPlayed > 0).slice(0, 3);
@@ -24,6 +40,8 @@ export default async function HomePage() {
   return (
     <>
       <Hero tagline={club.tagline} city={club.city} />
+
+      {showNextUp && <NextUpSection fixture={nextFixture} training={nextTraining} />}
 
       {/* Sobre el club */}
       <section className="relative bg-ink-950 py-28">
@@ -105,6 +123,8 @@ export default async function HomePage() {
                   won={p.matchesWon}
                   rate={p.rate}
                   isCaptain={p.isCaptain}
+                  injured={p.injured}
+                  photoUrl={p.photoUrl}
                 />
               </RevealItem>
             ))}

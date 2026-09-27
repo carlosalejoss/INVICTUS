@@ -41,6 +41,7 @@ model User {
   fechaNacimiento DateTime?
   position        Position?
   photoUrl        String?
+  injured         Boolean   @default(false)
   active          Boolean   @default(true) // false = "dado de baja" (soft delete, keeps historical stats intact)
 
   memberships       TeamMembership[]

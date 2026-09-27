@@ -10,6 +10,8 @@ export function PlayerCard({
   won,
   rate,
   isCaptain,
+  injured,
+  photoUrl,
 }: {
   name: string;
   position?: string | null;
@@ -18,6 +20,8 @@ export function PlayerCard({
   won: number;
   rate: number;
   isCaptain?: boolean;
+  injured?: boolean;
+  photoUrl?: string | null;
 }) {
   const initials = name
     .split(" ")
@@ -35,15 +39,25 @@ export function PlayerCard({
       <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gold-500/10 blur-2xl transition-all duration-500 group-hover:bg-gold-500/20" />
 
       <div className="relative flex items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gold-500/30 bg-ink-800 font-display text-lg text-gold-200">
-          {initials}
-        </div>
+        {photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- user-uploaded blob URL
+          <img src={photoUrl} alt={name} className="h-14 w-14 shrink-0 rounded-full border border-gold-500/30 object-cover" />
+        ) : (
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gold-500/30 bg-ink-800 font-display text-lg text-gold-200">
+            {initials}
+          </div>
+        )}
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-semibold text-white">{name}</h3>
             {isCaptain && (
               <span className="shrink-0 rounded-full border border-gold-500/40 bg-gold-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold-300">
                 Capitán
+              </span>
+            )}
+            {injured && (
+              <span className="shrink-0 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-rose-300">
+                Lesionado
               </span>
             )}
           </div>

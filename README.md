@@ -55,32 +55,13 @@ verdad, dejaremos de resembrar en cada `docker compose up`).
 
 ### Credenciales de prueba (solo desarrollo)
 
-Todas las cuentas migradas usan la contraseña **`invictus2026`**.
-
-| Nombre | Usuario | Rol |
-|---|---|---|
-| Directiva Invictus | `directiva` | Directiva (cuenta genérica, no es un jugador real) |
-| Jose Manuel | `jose.manuel` | **Capitán** de Veteranos Senior |
-| Javier Hernandez | `javier.hernandez` | Jugador |
-| Jesus Cortes Langa | `jesus.cortes` | Jugador |
-| Javier Angos | `javier.angos` | Jugador |
-| Jose Angel Mores | `jose.mores` | Jugador |
-| Chema Cortes | `chema.cortes` | Jugador |
-| Jose Luis Piquer | `jose.piquer` | Jugador |
-| Marco | `marco` | Jugador |
-| Carlos Saenz | `carlos.saenz` | Jugador |
-| Carlos Martinez | `carlos.martinez` | Jugador |
-| Jose Maria Jover Gomez | `jose.jover` | Jugador |
-| Alberto Perez | `alberto.perez` | Jugador |
-| Ruben Aguilar | `ruben.aguilar` | Jugador |
-| Diego Chocarro | `diego.chocarro` | Jugador |
-| Lorenzo Linares | `lorenzo.linares` | Jugador |
-| Moises Beltran | `moises.beltran` | Jugador |
-| JJ | `jj` | Jugador |
-| Angel Garcia | `angel.garcia` | Jugador |
-| Jesus Roman | `jesus.roman` | Jugador |
-| German | `german` | Jugador |
-| Fran | `fran` | Jugador |
+Las **70 cuentas** sembradas (69 jugadores de los 5 equipos + `directiva`) usan todas la misma
+contraseña de desarrollo: **`invictus2026`**. El usuario de cada jugador es `nombre.primerapellido`
+(p. ej. `jose.manuel`, `chema.cortes`, `fran`); la lista completa con nombre/equipo/rol está en
+`/panel/jugadores` una vez logueado como `directiva`, o directamente en `web/prisma/seed.ts`
+(`MASTER_PLAYERS`). Capitanes: **Jose Manuel** (Veteranos Senior), **Jose Maria Cortes Atance /
+"Chema"** (Invictus), **Carlos Domingo Bailo** (Invictus Veteranos), **Francisco Roldan Luque /
+"Fran"** (Invictus A e Invictus X).
 
 ⚠️ Cambia estas contraseñas (o crea cuentas reales desde el panel de directiva) antes de usar esto
 fuera de tu máquina.
@@ -123,6 +104,10 @@ Docker Compose es para local. Para que la web sea accesible por internet sin cos
      `NOTIFY_EMAIL_TO` si quieres que las notificaciones de "hace falta otra pista" lleguen también
      por email (si no las configuras, la web sigue funcionando y solo se queda el aviso dentro del
      panel de directiva).
+   - (Opcional pero recomendado) `BLOB_READ_WRITE_TOKEN` para que los jugadores puedan subir su foto
+     de perfil desde `/cuenta`: en tu proyecto de Vercel ve a **Storage → Create Database → Blob**
+     (gratis), y copia el token que te da a esta variable. Sin ella, el resto del perfil se sigue
+     pudiendo editar, pero la subida de foto muestra un aviso.
 4. **Deploy**. Vercel instala dependencias (esto ejecuta `prisma generate` automáticamente vía el
    script `postinstall`) y construye el sitio.
 5. **Siembra la base de datos una sola vez** (crea las tablas y carga jugadores/equipos/temporada).
@@ -142,8 +127,9 @@ después en Vercel → Domains). Los pushes a `main` en GitHub despliegan autom�
 - **Visitante sin sesión ("no jugador")**: ve todo el sitio público (inicio, club, plantilla,
   estadísticas, calendario) y puede abrir la ficha de un partido (`/partidos/[id]`), pero no puede
   marcar disponibilidad ni acceder a `/panel` o `/entrenamientos`.
-- **Jugador**: además, puede iniciar sesión, cambiar su contraseña, marcar disponible/no disponible
-  en los partidos de su equipo y apuntarse a entrenamientos.
+- **Jugador**: además, puede iniciar sesión, editar su propio perfil (nombre, apellidos, fecha de
+  nacimiento, lado, foto y si está lesionado) y contraseña desde `/cuenta`, marcar disponible/no
+  disponible en los partidos de su equipo, y apuntarse a entrenamientos.
 - **Capitán**: todo lo anterior + `/panel` para el/los equipo(s) que capitanea: crear partidos,
   construir la alineación (arrastrar jugadores a "Pareja 95/100/105" o "Pareja 1/2/3"), y subir el
   resultado de cada pareja tras jugar.
@@ -170,27 +156,35 @@ después en Vercel → Domains). Los pushes a `main` en GitHub despliegan autom�
 
 ## Origen de los datos
 
-- **Jugadores, posiciones, parejas, jornadas y resultados**: migrados desde
-  `AA VETERANOS SENIOR CLUB.numbers` (hojas `PAREJAS`, `Hoja 1`, `COMBINACIONES DERECHAS/REVESES`).
+- **Los 5 equipos del club y sus ~90 fichas de jugador** (nombre, apellidos, año de nacimiento,
+  capitanes): migrados desde `EQUIPOS INVICTUS.docx` (exportación de la Liga de Aragón, temporada
+  2026). La columna "Puntos" de ese documento no se ha modelado (no aporta nada útil aquí).
+- **Parejas, jornadas y resultados del equipo Veteranos Senior**: migrados desde
+  `AA VETERANOS SENIOR CLUB.numbers` (hojas `PAREJAS`, `Hoja 1`, `COMBINACIONES DERECHAS/REVESES`) y
+  fusionados con su ficha oficial del docx (p. ej. "Chema Cortes" = Jose Maria Cortes Atance).
 - **Nombre del club, ciudad y nº de equipos/seguidores**: tomados de la bio pública de Instagram
   [@invictuspadel](https://www.instagram.com/invictuspadel/).
-- **Roles, login, partidos con convocatoria, alineación por arrastre, entrenamientos y
-  patrocinadores**: funcionalidades y correcciones especificadas en `USUARIOS.docx`.
+- **Roles, login, partidos con convocatoria, alineación por arrastre, entrenamientos,
+  patrocinadores, filtro de equipo, perfil editable y foto de perfil**: funcionalidades y
+  correcciones especificadas por el club.
 
 ### ⚠️ Supuestos e invenciones a validar
 
 - El Excel original registra un partido **"contra Invictus"** en las jornadas 1 y 10. Se ha asumido
   que es el calendario real de "Veteranos Senior" (posible errata o nombre de competición) — dínoslo
   si hay que corregirlo.
-- **Capitán de Veteranos Senior**: confirmado, es **Jose Manuel**.
 - **Jornada 17**: es la única de las 18 sin jugar. El Excel no traía rival/fecha/hora para ella, así
   que se creó con rival "Por confirmar" — complétala desde `/panel/partidos` o edítala directamente.
 - **Jornada 11** se perdió administrativamente por "error en la alineación" (nota literal del Excel,
   sin parejas registradas); se guardó como resultado manual (derrota) en vez de por parejas.
+- **"Fran" = Francisco Roldán Luque**: el Excel de Veteranos Senior solo tenía el apodo "Fran" y una
+  edad; se ha identificado como Francisco Roldán Luque (mismo año de nacimiento, capitán de Invictus
+  A e Invictus X en el docx oficial) — confírmalo si no es la persona correcta.
 - **Año de fundación (2018)**, la descripción larga del club y los 4 "valores" del club son contenido
   de ejemplo inventado (marcado `INVENTADO` en `seed.ts`).
-- Se crearon los 5 equipos del club (3 veteranos + 2 absolutos), pero solo **Veteranos Senior** tiene
-  jugadores y calendario reales; los otros 4 están vacíos, listos para rellenar desde el panel.
+- **Lado (revés/derecha) y foto**: solo se conocían para los 21 jugadores del Excel de Veteranos
+  Senior; el resto de la plantilla (unos 48 jugadores) empieza sin lado asignado ni foto — cada uno
+  lo completa desde `/cuenta` cuando tenga su cuenta.
 - **Logo del club**: los archivos reales (`web/public/branding/`) sustituyen al escudo de ejemplo que
   se usó en la primera iteración.
 - **Patrocinadores**: los 7 logos reales facilitados por el club están en `web/public/sponsors/` y
@@ -201,7 +195,6 @@ después en Vercel → Domains). Los pushes a `main` en GitHub despliegan autom�
 
 - Dejar de resembrar en cada arranque una vez el panel sea la fuente de verdad del contenido.
 - Migrar de `prisma db push` a migraciones versionadas (`prisma migrate`) de cara a producción.
-- Selector de equipo en las páginas públicas (plantilla/estadísticas/calendario) para cuando los
-  otros 4 equipos tengan datos.
-- Historial/edición de convocatorias pasadas, subir foto de jugador, recuperación de contraseña
-  por email.
+- Selector de equipo también en estadísticas/calendario (hoy solo está en plantilla), para cuando
+  los otros 4 equipos tengan partidos.
+- Historial/edición de convocatorias pasadas, recuperación de contraseña por email.
