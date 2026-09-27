@@ -34,50 +34,57 @@ export default async function PlantillaPage({ searchParams }: { searchParams: { 
           <TeamFilter teams={allTeams} current={teamName} />
         </Reveal>
 
-        {reves.length > 0 && (
-          <section className="mt-16">
-            <Reveal>
-              <h2 className="font-display text-2xl text-gold-100">Revés</h2>
-            </Reveal>
-            <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
-              {reves.map((p) => (
-                <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </section>
-        )}
+        {/* `key={teamName}` forces a full remount of this subtree on every team switch -- without
+            it, React reuses the RevealGroup/RevealItem instances across a client-side navigation
+            (the <select> doesn't reload the page) and Framer Motion's one-shot `whileInView`
+            reveal never re-fires for the new set of players, leaving them stuck invisible even
+            though they're correctly in the DOM. */}
+        <div key={teamName}>
+          {reves.length > 0 && (
+            <section className="mt-16">
+              <Reveal>
+                <h2 className="font-display text-2xl text-gold-100">Revés</h2>
+              </Reveal>
+              <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
+                {reves.map((p) => (
+                  <RevealItem key={p.id}>
+                    <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            </section>
+          )}
 
-        {derecha.length > 0 && (
-          <section className="mt-16">
-            <Reveal>
-              <h2 className="font-display text-2xl text-gold-100">Derecha</h2>
-            </Reveal>
-            <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
-              {derecha.map((p) => (
-                <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </section>
-        )}
+          {derecha.length > 0 && (
+            <section className="mt-16">
+              <Reveal>
+                <h2 className="font-display text-2xl text-gold-100">Derecha</h2>
+              </Reveal>
+              <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
+                {derecha.map((p) => (
+                  <RevealItem key={p.id}>
+                    <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            </section>
+          )}
 
-        {sinPosicion.length > 0 && (
-          <section className="mt-16">
-            <Reveal>
-              <h2 className="font-display text-2xl text-gold-100">Sin lado asignado</h2>
-            </Reveal>
-            <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
-              {sinPosicion.map((p) => (
-                <RevealItem key={p.id}>
-                  <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </section>
-        )}
+          {sinPosicion.length > 0 && (
+            <section className="mt-16">
+              <Reveal>
+                <h2 className="font-display text-2xl text-gold-100">Sin lado asignado</h2>
+              </Reveal>
+              <RevealGroup className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
+                {sinPosicion.map((p) => (
+                  <RevealItem key={p.id}>
+                    <PlayerCard name={p.fullName} position={p.position} age={p.age} played={p.matchesPlayed} won={p.matchesWon} rate={p.rate} isCaptain={p.isCaptain} injured={p.injured} photoUrl={p.photoUrl} />
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   );
