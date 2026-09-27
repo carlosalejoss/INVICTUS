@@ -21,8 +21,8 @@ import { auth } from "@/auth";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const session = await auth();
-  const showNextUp = session && (session.user.role === "JUGADOR" || session.user.role === "CAPITAN");
+  const session = await auth().catch(() => null);
+  const showNextUp = Boolean(session?.user && (session.user.role === "JUGADOR" || session.user.role === "CAPITAN"));
 
   const [club, values, players, summary, team, sponsors, nextFixture, nextTraining] = await Promise.all([
     getClubInfo(),
@@ -31,7 +31,7 @@ export default async function HomePage() {
     getTeamSummary(),
     getTeamByName(),
     getSponsors(),
-    showNextUp ? getNextFixtureForUser(session.user.id) : Promise.resolve(null),
+    showNextUp && session?.user ? getNextFixtureForUser(session.user.id) : Promise.resolve(null),
     showNextUp ? getNextTrainingSession() : Promise.resolve(null),
   ]);
 

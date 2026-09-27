@@ -10,6 +10,10 @@ export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [],
+  // Vercel (and Docker behind no reverse proxy of our own) terminates TLS and forwards a Host
+  // header we don't control the trust chain for by default -- without this, Auth.js rejects every
+  // request with "UntrustedHost" and the whole site 500s (auth() throws instead of returning null).
+  trustHost: true,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

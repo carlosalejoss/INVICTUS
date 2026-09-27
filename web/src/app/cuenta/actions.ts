@@ -29,9 +29,6 @@ export async function updateProfile(_prev: ProfileFormState, formData: FormData)
   if (photo instanceof File && photo.size > 0) {
     if (photo.size > MAX_PHOTO_BYTES) return { error: "La foto no puede superar los 5MB." };
     if (!photo.type.startsWith("image/")) return { error: "El archivo debe ser una imagen." };
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      return { error: "La subida de fotos no está configurada en este entorno (falta BLOB_READ_WRITE_TOKEN)." };
-    }
     try {
       const ext = photo.name.split(".").pop() || "jpg";
       const blob = await put(`profile-photos/${session.user.id}-${Date.now()}.${ext}`, photo, {
